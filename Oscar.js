@@ -2,7 +2,6 @@
 //R= 10889
 db.Filme.countDocuments()
 
-
 //1.2
 //R= ACTOR, ACRESS, DIRECTOR, WRITER
 db.Filme.distinct("category")
@@ -18,7 +17,6 @@ db.Filme.find({}, { year_ceremony: 1, _id: 0 }).sort({ year_ceremony: -1 }).limi
 //1.5
 //R= 96
 db.Filme.distinct("ceremony").length
-
 
 //Exploração Categoria
 
@@ -46,7 +44,6 @@ db.Filme.aggregate([
   { $limit: 1 }
 ]);
 
-
 //2.4
 //R= 1976
 db.Filme.find({ category: "ACTRESS" }, { year_ceremony: 1, _id: 0 }).sort({ year_ceremony: -1 }).limit(1)
@@ -58,11 +55,9 @@ db.Filme.aggregate([
     max_year: { $max: "$year_ceremony" } } },
 ])
 
-
 //2.6
 //R= DIRECTIONG, DIRETING (Comedy Picture), DIRECTING, DIRECTING (Dramatic Picture)
 db.oscar_indicados.distinct("category", { category: /DIRECTING/ });
-
 
 //Atores e Atrizes
 
@@ -98,7 +93,6 @@ db.Filme.countDocuments({name: "Viola Davis", winner: true})
 //R= Fences, The Help, Doubt, Ma Rainey's Black Bottom
 db.Filme.find({name: "Viola Davis"}, { film: 1, _id: 0})
 
-
 //3.8
 //R = 0
 db.Filme.countDocuments({ name: "Amy Adams", winner: true });
@@ -106,7 +100,6 @@ db.Filme.countDocuments({ name: "Amy Adams", winner: true });
 //3.9
 //R= 6
 db.Filme.countDocuments({ name: "Amy Adams"});
-
 
 //3.10
 //R= 2
@@ -125,7 +118,6 @@ db.Filme.find({name: "Denzel Washington"},
   {year_ceremony: 1, category: 1, film: 1, winner: 1, _id: 0}
 )
 
-
 //4.1
 //R= Ano: 1928 Filme: 7th Heaven. Atriz: Janet Gaynor
 db.oscar_indicados.find(
@@ -133,14 +125,12 @@ db.oscar_indicados.find(
   { name: 1, year_ceremony: 1, film: 1, _id: 0 }
 ).sort({ year_ceremony: 1 }).limit(1);
 
-
 //4.2
 //R= Ano: 1928 Filme: The Last Command Ator: Emil Jannings
 db.Filme.find(
   { category: "ACTOR", winner: true }, 
   { name: 1, year_ceremony: 1, film: 1, _id: 0 }
 ).sort({ year_ceremony: 1 }).limit(1);
-
 
 // 4.3
 //R= 2455
@@ -156,7 +146,6 @@ db.oscar_indicados.find(
   }, 
   { year_ceremony: 1, category: 1, film: 1, _id: 0 }
 );
-
 
 //4.5
 //R= 1328
@@ -178,7 +167,6 @@ db.Filme.aggregate([
 {$group: { _id: "$name", total_indicacoes: { $sum: 1 } } },
 {$sort: { total_indicacoes: -1 } },
 { $limit: 1 }
-
 ])
 
 //5.3
@@ -197,4 +185,193 @@ db.Filme.aggregate([
 ]);
 
 //5.4
-//
+//R= Oliver Wallace, entre outros
+db.Filme.aggregate([
+  {
+    $group: {
+      _id: "$name",
+      categorias: { $addToSet: "$category" }
+    }
+  },
+  {
+    $project: {
+      categorias: 1,
+      qtdCategorias: { $size: "$categorias" }
+    }
+  },
+  {
+    $match: {
+      qtdCategorias: { $gt: 1 }
+    }
+  },
+  {
+    $sort: {
+      qtdCategorias: -1,
+      _id: 1
+    }
+  }
+])
+
+//5.5
+//R= 5622
+db.Filme.aggregate([
+  {
+    $group: {
+      _id: "$name",
+      totalIndicacao: { $sum: 1 }
+    }
+  },
+  {
+    $match: {
+      totalIndicacao: 1
+    }
+  },
+  {
+    $count: "qtdIndicadosCom1Indicacao"
+  }
+])
+
+//5.6
+//R= Ano: 1944 Total pessoas: 164
+db.oscar.aggregate([
+  {
+    $group: {
+      _id: {
+        ano: "$year_ceremony",
+        nome: "$name"
+      }
+    }
+  },
+  {
+    $group: {
+      _id: "$_id.ano",
+      totalPessoas: { $sum: 1 }
+    }
+  },
+  {
+    $sort: {
+      totalPessoas: -1
+    }
+  },
+  {
+    $limit: 1
+  }
+])
+
+//6.1
+//R= 2011 e 2020
+db.Filme.aggregate([
+  {
+    $match: {
+      film: /Toy Story/i,
+      winner: true
+    }
+  },
+  {
+    $group: {
+      _id: "$year_ceremony"
+    }
+  },
+  {
+    $sort: {
+      _id: 1
+    }
+  }
+])
+
+//6.2
+//R=11
+db.Filme.aggregate([
+  {
+    $match:{
+      film: /Toy Story/i
+    }
+  },
+  {
+    $count: "totalIndicacoes"
+  }
+])
+
+//6.2
+//R= 11
+db.Filme.aggregate([
+  {
+    $match: {
+      film: /Toy Story/i
+    }
+  },
+  {
+    $count: "totalIndicacoes"
+  }
+])
+
+//6.3
+//R= Animated Feature Film, Best Picture, Sound Editing, entre outros
+db.Filme.aggregate([
+  {
+    $match:{
+      film: /Toy Story/i
+    }
+  },
+  {
+    $group:{
+      _id: "$category"
+    }
+  },
+  {
+    $sort:{
+      _id:1
+    }
+  }
+])
+
+//6.4
+//R= 2006 -78
+db.Filme.aggregate([
+  {
+    $match: {
+      film: "Crash"
+    }
+  },
+  {
+    $group: {
+      _id: "$ceremony",
+      anoCeremony: { $first: "$year_ceremony" }
+    }
+  },
+  {
+    $sort: {
+      _id: 1
+    }
+  }
+])
+
+//6.5
+//R= 6
+db.Filme.aggregate([
+  {
+    $match: {
+      film: "Crash"
+    }
+  },
+  {
+    $count: "totalIndicacoes"
+  }
+])
+
+//6.6
+//R=Ganhou em 2006
+db.Filme.find({
+  film: "Crash",
+  category: "BEST PICTURE",
+  winner: true
+})
+
+//6.7
+//R= Não existe
+db.Filme.findOne({
+  film: "Central do Brasil"
+})
+
+//6.8
+//R=Não existe
